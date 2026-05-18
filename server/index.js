@@ -1,57 +1,45 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import axios from "axios";
 import mongoose from "mongoose";
+import axios from "axios";
+
+import authRoutes from "./routes/auth.js";
 import Chat from "./models/chat.js";
 
 dotenv.config();
 
+// ✅ STEP 1: CREATE APP FIRST
 const app = express();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// MongoDB connection
+// ✅ STEP 2: ROUTES AFTER APP CREATION
+app.use("/api/auth", authRoutes);
+
+// MongoDB connect
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected"))
-  .catch((err) => console.log("MongoDB Error:", err));
+  .catch((err) => console.log(err));
 
-// Health check route
+// Test route
 app.get("/", (req, res) => {
   res.send("Backend is running 🚀");
 });
 
-// Main AI route
+// AI route
 app.post("/api/explain", async (req, res) => {
   try {
     const { topic } = req.body;
-
-    if (!topic) {
-      return res.status(400).json({ error: "Topic is required" });
-    }
-
-    const prompt = `
-Explain "${topic}" like a friendly college senior.
-Use simple language.
-Give relatable examples.
-Avoid textbook style.
-Keep it fun and beginner friendly.
-`;
 
     const response = await axios.post(
       "https://api.groq.com/openai/v1/chat/completions",
       {
         model: "llama-3.1-8b-instant",
-        messages: [
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
-        temperature: 0.7,
+        messages: [{ role: "user", content: topic }],
       },
       {
         headers: {
@@ -63,30 +51,22 @@ Keep it fun and beginner friendly.
 
     const aiReply = response.data.choices[0].message.content;
 
-    // Save to MongoDB
-    const newChat = new Chat({
+    await Chat.create({
       question: topic,
       answer: aiReply,
-      language: "English",
     });
 
-    await newChat.save();
-
-    // Send response to frontend
     res.json({ reply: aiReply });
 
-  } catch (error) {
-    console.log("Error:", error.response?.data || error.message);
-
-    res.status(500).json({
-      error: "Something went wrong",
-    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
-// Start server (IMPORTANT FOR RENDER)
+// ✅ STEP 3: START SERVER LAST
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, "0.0.0.0", () => {
+app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

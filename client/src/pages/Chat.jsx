@@ -2,7 +2,10 @@ import mongoose from "mongoose";
 
 const ChatSchema = new mongoose.Schema(
   {
-    userEmail: String,
+    userEmail: {
+      type: String,
+      required: true,
+    },
     question: String,
     answer: String,
     language: String,
