@@ -3,15 +3,13 @@ import User from "../models/User.js";
 
 const router = express.Router();
 
-// REGISTER
+// REGISTER (POST ONLY)
 router.post("/register", async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ msg: "User already exists" });
-    }
+    const existing = await User.findOne({ email });
+    if (existing) return res.status(400).json({ msg: "User already exists" });
 
     const user = new User({ name, email, password });
     await user.save();
@@ -28,13 +26,10 @@ router.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ msg: "User not found" });
-    }
+    if (!user) return res.status(400).json({ msg: "User not found" });
 
-    if (user.password !== password) {
+    if (user.password !== password)
       return res.status(400).json({ msg: "Wrong password" });
-    }
 
     res.json({
       user: {

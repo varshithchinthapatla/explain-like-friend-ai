@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useNavigate, Link } from "react-router-dom";
+import { setUser } from "../utils/auth";
 
-function Login() {
-  const navigate = useNavigate(); // ✅ inside component
-
+export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
   const login = async () => {
     try {
@@ -15,28 +15,40 @@ function Login() {
         { email, password }
       );
 
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-
-      navigate("/"); // ✅ correct navigation
+      setUser(res.data.user);
+      navigate("/");
     } catch (err) {
       alert(err.response?.data?.msg || "Login failed");
     }
   };
 
   return (
-    <div>
-      <h2>Login</h2>
+    <div className="auth-container">
+      <div className="auth-card">
+        <h2>Welcome Back 👋</h2>
+        <p>Login to continue</p>
 
-      <input onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
-      <input onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
+        <input
+          className="input"
+          placeholder="Email"
+          onChange={(e) => setEmail(e.target.value)}
+        />
 
-      <button onClick={login}>Login</button>
+        <input
+          className="input"
+          type="password"
+          placeholder="Password"
+          onChange={(e) => setPassword(e.target.value)}
+        />
 
-      <p onClick={() => navigate("/register")}>
-        Register
-      </p>
+        <button className="btn btn-primary" onClick={login}>
+          Login
+        </button>
+
+        <p className="link">
+          Don't have an account? <Link to="/register">Register</Link>
+        </p>
+      </div>
     </div>
   );
 }
-
-export default Login;

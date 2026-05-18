@@ -9,37 +9,48 @@ import Chat from "./models/chat.js";
 
 dotenv.config();
 
-// ✅ STEP 1: CREATE APP FIRST
 const app = express();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// ✅ STEP 2: ROUTES AFTER APP CREATION
+// Routes
 app.use("/api/auth", authRoutes);
 
-// MongoDB connect
+// MongoDB
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected"))
   .catch((err) => console.log(err));
 
-// Test route
+// Health check
 app.get("/", (req, res) => {
   res.send("Backend is running 🚀");
 });
 
-// AI route
+
+// ===============================
+// 🤖 AI + SAVE CHAT ROUTE
+// ===============================
 app.post("/api/explain", async (req, res) => {
   try {
-    const { topic } = req.body;
+    const { topic, user } = req.body;
+
+    if (!topic) {
+      return res.status(400).json({ error: "Topic required" });
+    }
+
+    const prompt = `
+Explain "${topic}" like a friendly teacher.
+Keep it simple and easy.
+`;
 
     const response = await axios.post(
       "https://api.groq.com/openai/v1/chat/completions",
       {
         model: "llama-3.1-8b-instant",
-        messages: [{ role: "user", content: topic }],
+        messages: [{ role: "user", content: prompt }],
       },
       {
         headers: {
@@ -51,20 +62,40 @@ app.post("/api/explain", async (req, res) => {
 
     const aiReply = response.data.choices[0].message.content;
 
+    // 💾 SAVE CHAT (IMPORTANT FIX)
     await Chat.create({
+      userId: user?.email,
       question: topic,
       answer: aiReply,
+      language: "English",
     });
 
     res.json({ reply: aiReply });
 
   } catch (err) {
-    console.log(err);
+    console.log(err.response?.data || err.message);
     res.status(500).json({ error: "Server error" });
   }
 });
 
-// ✅ STEP 3: START SERVER LAST
+
+// ===============================
+// 📜 GET CHAT HISTORY
+// ===============================
+app.post("/api/chats", async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    const chats = await Chat.find({ userId }).sort({ createdAt: -1 });
+
+    res.json(chats);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+// START SERVER
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {

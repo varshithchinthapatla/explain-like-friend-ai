@@ -1,41 +1,46 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useNavigate, Link } from "react-router-dom";
+import { setUser } from "../utils/auth";
 
-function Register() {
-  const navigate = useNavigate();
-
+export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
   const register = async () => {
     try {
-      await axios.post(
+      const res = await axios.post(
         "https://explain-like-friend-ai.onrender.com/api/auth/register",
         { name, email, password }
       );
 
-      alert("Registered successfully");
-      navigate("/login");
+      setUser(res.data.user);
+      navigate("/");
     } catch (err) {
-      alert(err.response?.data?.msg || "Error");
+      alert(err.response?.data?.msg || "Register failed");
     }
   };
 
   return (
-    <div>
-      <h2>Register</h2>
+    <div className="auth-container">
+      <div className="auth-card">
+        <h2>Create Account 🚀</h2>
+        <p>Join Explain Like Friend AI</p>
 
-      <input onChange={(e) => setName(e.target.value)} placeholder="Name" />
-      <input onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
-      <input onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
+        <input className="input" placeholder="Name" onChange={(e) => setName(e.target.value)} />
+        <input className="input" placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
+        <input className="input" type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
 
-      <button onClick={register}>Register</button>
+        <button className="btn btn-primary" onClick={register}>
+          Register
+        </button>
 
-      <p onClick={() => navigate("/login")}>Already have account?</p>
+        <p className="link">
+          Already have an account? <Link to="/login">Login</Link>
+        </p>
+      </div>
     </div>
   );
 }
-
-export default Register; 

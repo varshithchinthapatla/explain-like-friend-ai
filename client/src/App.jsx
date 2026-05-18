@@ -24,7 +24,20 @@ function App() {
       navigate("/login");
     }
   }, []);
+useEffect(() => {
+  const fetchChats = async () => {
+    if (!user) return;
 
+    const res = await axios.post(
+      "https://explain-like-friend-ai.onrender.com/api/chats",
+      { userId: user.email }
+    );
+
+    setChatHistory(res.data);
+  };
+
+  fetchChats();
+}, []);
   // typing animation
   useEffect(() => {
     let i = 0;
@@ -73,26 +86,39 @@ function App() {
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>Explain Like Friend AI</h2>
+  <div className="app">
 
+    {/* TOP BAR */}
+    <header className="topbar">
+      <h2>Explain Like Friend AI 🚀</h2>
       <button onClick={logout}>Logout</button>
+    </header>
 
-      <input
-        value={topic}
-        onChange={(e) => setTopic(e.target.value)}
-        placeholder="Enter topic"
-      />
+    {/* CHAT AREA */}
+    <div className="chat-container">
 
-      <button onClick={explainTopic}>
-        {loading ? "Thinking..." : "Explain"}
-      </button>
-
-      <div style={{ marginTop: 20 }}>
-        {displayedText || "AI response here"}
+      <div className="chat-box">
+        {displayedText || "Ask me anything..."}
       </div>
-    </div>
-  );
-}
 
+      {/* INPUT AREA */}
+      <div className="input-area">
+
+        <input
+          value={topic}
+          onChange={(e) => setTopic(e.target.value)}
+          placeholder="Type your question..."
+        />
+
+        <button onClick={explainTopic}>
+          {loading ? "Thinking..." : "Send 🚀"}
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+);
+}
 export default App;
