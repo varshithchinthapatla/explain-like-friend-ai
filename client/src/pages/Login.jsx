@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import API from "../utils/api";
 import { useNavigate, Link } from "react-router-dom";
 import { setUser } from "../utils/auth";
 
@@ -10,8 +10,8 @@ export default function Login() {
 
   const login = async () => {
     try {
-      const res = await axios.post(
-        "https://explain-like-friend-ai.onrender.com/api/auth/login",
+      const res = await API.post(
+  "/api/auth/login",
         { email, password }
       );
 

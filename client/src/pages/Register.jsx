@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import API from "../utils/api";
 import { useNavigate, Link } from "react-router-dom";
 import { setUser } from "../utils/auth";
 
@@ -11,8 +11,8 @@ export default function Register() {
 
   const register = async () => {
     try {
-      const res = await axios.post(
-        "https://explain-like-friend-ai.onrender.com/api/auth/register",
+      const res = await API.post(
+  "/api/auth/register",
         { name, email, password }
       );
 
